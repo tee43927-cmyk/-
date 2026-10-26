@@ -1,0 +1,462 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101c2c">
+<title>EcoSphere | 3D Ecosystem Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#101a29;--panel:rgba(25,40,57,.86);--line:rgba(255,255,255,.1);--text:#edf6f5;--muted:#91a6b7;--green:#75e0b0;--cyan:#7dd3fc;--gold:#f6d68b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Prompt',sans-serif;min-height:100vh}
+button{font:inherit;cursor:pointer}
+.app{max-width:1600px;margin:auto;padding:24px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#76e4b0,#36a8c8);display:grid;place-items:center;color:#102a31;font-size:26px;box-shadow:0 8px 28px #49c8a533}
+.brand h1{font-size:21px;margin:0;font-weight:600;letter-spacing:-.5px}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.status{display:flex;align-items:center;gap:9px;padding:10px 15px;border:1px solid var(--line);border-radius:30px;background:#ffffff08;color:#b5c8d4;font-size:12px}
+.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px #75e0b0}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:0 0 20px}
+.eyebrow{font-size:11px;color:var(--green);letter-spacing:2px;font-weight:600}
+.hero h2{font-size:clamp(25px,3vw,38px);margin:7px 0;font-weight:500;letter-spacing:-1px}
+.hero p{color:var(--muted);font-size:13px;margin:0;line-height:1.8}
+.pill{border:1px solid #75e0b044;border-radius:30px;padding:9px 15px;color:var(--green);font-size:12px;white-space:nowrap;background:#75e0b00a}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.83fr);gap:20px;align-items:stretch}
+.scene-card,.panel{border:1px solid var(--line);border-radius:24px;background:var(--panel);backdrop-filter:blur(22px);overflow:hidden;box-shadow:0 18px 60px #00000020}
+.scene-head{display:flex;justify-content:space-between;align-items:center;padding:19px 21px;border-bottom:1px solid var(--line);gap:10px}
+.scene-head h3{margin:0;font-size:14px;font-weight:500}
+.scene-head span{font-size:11px;color:var(--muted)}
+.scene-wrap{height:490px;position:relative;background:radial-gradient(ellipse at 50% 40%,#1f4851,#132637 66%,#111d2b);overflow:hidden}
+#scene{width:100%;height:100%;display:block;outline:none}
+.scene-label{position:absolute;top:16px;left:16px;padding:9px 12px;border-radius:12px;background:#0d1c29b8;border:1px solid #ffffff14;font-size:11px;color:#b7d8d8;pointer-events:none}
+.scene-label b{color:var(--green);font-weight:500}
+.hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:8px 13px;border-radius:30px;background:#0d1c29c9;border:1px solid #ffffff14;color:#b4c6d3;font-size:10px;white-space:nowrap;pointer-events:none}
+.scene-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;flex-wrap:wrap}
+.legend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:11px}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:8px;height:8px;border-radius:50%}
+.controls{display:flex;gap:7px}
+.control-btn{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#ffffff08;color:#c9d8df;font-size:11px;transition:.2s}
+.control-btn:hover,.control-btn.active{border-color:#75e0b077;color:var(--green);background:#75e0b012}
+.panel{padding:22px;display:flex;flex-direction:column;gap:20px}
+.panel-top{display:flex;align-items:center;justify-content:space-between}
+.panel-top h3{font-size:15px;margin:0;font-weight:500}
+.counter{font-size:10px;color:var(--green);background:#75e0b012;border:1px solid #75e0b02a;padding:6px 9px;border-radius:20px}
+.topic-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.topic{border:1px solid var(--line);border-radius:13px;background:#ffffff05;color:#c1d0d8;padding:11px 5px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.25s;min-width:0}
+.topic .emoji{font-size:23px}
+.topic .topic-name{font-size:10px}
+.topic:hover,.topic.selected{background:#75e0b014;border-color:#75e0b077;color:var(--green);transform:translateY(-2px)}
+.divider{height:1px;background:var(--line)}
+.info-card{animation:appear .35s ease}
+@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.info-tag{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-size:10px;letter-spacing:.7px;background:#75e0b012;padding:6px 10px;border-radius:7px}
+.info-card h3{font-size:24px;font-weight:500;margin:12px 0 7px}
+.info-card .subtitle{font-size:11px;color:var(--muted);margin-bottom:14px}
+.info-card .description{font-size:12px;line-height:2;color:#bdccd5;margin:0}
+.fact-box{border:1px solid #7dd3fc25;background:linear-gradient(120deg,#7dd3fc0b,#75e0b008);padding:13px;border-radius:13px;margin-top:15px}
+.fact-box strong{display:block;color:var(--cyan);font-size:11px;font-weight:500;margin-bottom:5px}
+.fact-box p{font-size:11px;line-height:1.8;color:#b9cbd6;margin:0}
+.eco-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{padding:12px 9px;border:1px solid var(--line);border-radius:13px;background:#ffffff04}
+.stat .value{font-size:20px;color:var(--green);font-weight:500}
+.stat .label{font-size:10px;color:var(--muted);margin-top:3px}
+.learn-btn{width:100%;border:0;border-radius:12px;background:linear-gradient(100deg,#75e0b0,#7dd3fc);color:#102a31;font-size:12px;font-weight:600;padding:13px;transition:.2s}
+.learn-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.footer{display:flex;justify-content:space-between;gap:15px;margin-top:18px;color:#758a9b;font-size:10px;line-height:1.8}
+.footer strong{color:#b6c9d2;font-weight:400}
+.toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 18px;background:#142d3aee;border:1px solid #75e0b055;border-radius:12px;color:var(--green);font-size:12px;opacity:0;pointer-events:none;transition:.3s;z-index:3}
+.toast.show{opacity:1}
+@media(max-width:900px){.app{padding:18px}.layout{grid-template-columns:1fr}.scene-wrap{height:min(60vw,450px);min-height:310px}.panel{gap:17px}.topic-list{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:560px){.app{padding:13px}.topbar{margin-bottom:20px}.brand h1{font-size:18px}.status{padding:8px 10px;font-size:10px}.hero{align-items:start;flex-direction:column}.hero h2{font-size:27px}.layout{gap:13px}.scene-card,.panel{border-radius:18px}.scene-head{padding:15px}.scene-wrap{height:350px;min-height:0}.scene-footer{padding:13px}.hint{font-size:9px}.panel{padding:17px}.topic-list{grid-template-columns:repeat(3,minmax(0,1fr))}.footer{flex-direction:column;gap:4px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+<div class="brand">
+<div class="logo">✳</div>
+<div><h1>EcoSphere<span style="color:var(--green)">.</span></h1><p>INTERACTIVE LEARNING ENVIRONMENT</p></div>
+</div>
+<div class="status"><span class="dot"></span> 3D EXPERIENCE ACTIVE</div>
+</header>
+<section class="hero">
+<div><div class="eyebrow">SCIENCE · MODULE 01</div><h2>สำรวจโลกของระบบนิเวศ</h2><p>เรียนรู้ความสัมพันธ์ของสิ่งมีชีวิตและสิ่งแวดล้อม ผ่านประสบการณ์สามมิติ</p></div>
+<div class="pill">✦ &nbsp; Explore · Discover · Learn</div>
+</section>
+<main class="layout">
+<section class="scene-card">
+<div class="scene-head"><h3>🌿 &nbsp; Ecosystem Explorer</h3><span>INTERACTIVE 3D MODEL</span></div>
+<div class="scene-wrap" id="sceneWrap">
+<canvas id="scene" aria-label="ฉากจำลองระบบนิเวศสามมิติ"></canvas>
+<div class="scene-label">BIOME 01 &nbsp; / &nbsp; <b>ป่าเขตอบอุ่น</b></div>
+<div class="hint">คลิกวัตถุเพื่อสำรวจ · ลากเพื่อหมุน · Scroll เพื่อซูม</div>
+<div class="toast" id="toast">เลือกวัตถุเพื่อเรียนรู้</div>
+</div>
+<div class="scene-footer">
+<div class="legend">
+<span><i class="swatch" style="background:#79dfa8"></i>ผู้ผลิต</span>
+<span><i class="swatch" style="background:#f6d68b"></i>ผู้บริโภค</span>
+<span><i class="swatch" style="background:#7dd3fc"></i>สิ่งไม่มีชีวิต</span>
+</div>
+<div class="controls">
+<button class="control-btn" id="resetBtn">↺ รีเซ็ตมุมมอง</button>
+<button class="control-btn active" id="rotateBtn">◉ หมุนอัตโนมัติ</button>
+</div>
+</div>
+</section>
+<aside class="panel">
+<div class="panel-top"><h3>ค้นพบองค์ประกอบ</h3><span class="counter" id="counter">01 / 06</span></div>
+<div class="topic-list" id="topicList">
+<button class="topic selected" data-id="tree"><span class="emoji">🌳</span><span class="topic-name">ต้นไม้</span></button>
+<button class="topic" data-id="deer"><span class="emoji">🦌</span><span class="topic-name">กวาง</span></button>
+<button class="topic" data-id="bird"><span class="emoji">🐦</span><span class="topic-name">นก</span></button>
+<button class="topic" data-id="water"><span class="emoji">💧</span><span class="topic-name">แหล่งน้ำ</span></button>
+<button class="topic" data-id="sun"><span class="emoji">☀️</span><span class="topic-name">แสงอาทิตย์</span></button>
+<button class="topic" data-id="mushroom"><span class="emoji">🍄</span><span class="topic-name">ผู้ย่อยสลาย</span></button>
+</div>
+<div class="divider"></div>
+<div class="info-card" id="infoCard">
+<div class="info-tag"><span>✦</span> ECOSYSTEM INSIGHT</div>
+<h3 id="infoTitle">ต้นไม้</h3>
+<div class="subtitle" id="infoSubtitle">PRODUCER · ผู้ผลิต</div>
+<p class="description" id="infoDescription">ต้นไม้เป็นผู้ผลิตในระบบนิเวศ สามารถสร้างอาหารด้วยกระบวนการสังเคราะห์ด้วยแสง โดยใช้พลังงานจากดวงอาทิตย์ น้ำ และก๊าซคาร์บอนไดออกไซด์</p>
+<div class="fact-box"><strong>💡 รู้หรือไม่?</strong><p id="infoFact">พืชเป็นจุดเริ่มต้นสำคัญของห่วงโซ่อาหาร เพราะเปลี่ยนพลังงานแสงให้เป็นพลังงานเคมีที่สิ่งมีชีวิตอื่นนำไปใช้ได้</p></div>
+</div>
+<div class="divider"></div>
+<div><div class="panel-top" style="margin-bottom:12px"><h3>ภาพรวมระบบนิเวศ</h3><span style="font-size:10px;color:var(--muted)">KEY INDICATORS</span></div>
+<div class="eco-stats">
+<div class="stat"><div class="value">06</div><div class="label">องค์ประกอบ</div></div>
+<div class="stat"><div class="value">03</div><div class="label">กลุ่มหลัก</div></div>
+<div class="stat"><div class="value">∞</div><div class="label">ความสัมพันธ์</div></div>
+</div></div>
+<button class="learn-btn" id="nextBtn">สำรวจองค์ประกอบถัดไป &nbsp; →</button>
+</aside>
+</main>
+<footer class="footer"><span><strong>EcoSphere Learning Lab</strong> · สื่อการเรียนรู้วิทยาศาสตร์เชิงโต้ตอบ</span><span>หมุนโมเดลได้อย่างอิสระเพื่อสำรวจระบบนิเวศ</span></footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+const canvas=document.getElementById('scene');
+const wrap=document.getElementById('sceneWrap');
+const toast=document.getElementById('toast');
+const data={
+tree:{title:'ต้นไม้',subtitle:'PRODUCER · ผู้ผลิต',description:'ต้นไม้เป็นผู้ผลิตในระบบนิเวศ สามารถสร้างอาหารด้วยกระบวนการสังเคราะห์ด้วยแสง โดยใช้พลังงานจากดวงอาทิตย์ น้ำ และก๊าซคาร์บอนไดออกไซด์',fact:'พืชเป็นจุดเริ่มต้นสำคัญของห่วงโซ่อาหาร เพราะเปลี่ยนพลังงานแสงให้เป็นพลังงานเคมีที่สิ่งมีชีวิตอื่นนำไปใช้ได้',emoji:'🌳'},
+deer:{title:'กวาง',subtitle:'PRIMARY CONSUMER · ผู้บริโภคอันดับหนึ่ง',description:'กวางเป็นสัตว์กินพืช จึงได้รับพลังงานจากการกินใบไม้ หญ้า และพืชชนิดต่าง ๆ กวางยังเป็นอาหารของผู้ล่าและช่วยรักษาสมดุลของประชากรพืช',fact:'การกินพืชและการกระจายเมล็ดพันธุ์ของสัตว์กินพืชมีส่วนช่วยในการฟื้นฟูป่า',emoji:'🦌'},
+bird:{title:'นก',subtitle:'CONSUMER · ผู้บริโภค',description:'นกมีบทบาทหลากหลายในระบบนิเวศ บางชนิดกินแมลง บางชนิดกินผลไม้ และบางชนิดล่าเหยื่อ นกหลายชนิดช่วยกระจายเมล็ดพันธุ์และควบคุมประชากรแมลง',fact:'เมล็ดพืชที่ติดไปกับนกหรือผ่านทางมูลนกสามารถงอกในพื้นที่ใหม่และเพิ่มความหลากหลายของป่า',emoji:'🐦'},
+water:{title:'แหล่งน้ำ',subtitle:'ABIOTIC FACTOR · ปัจจัยไม่มีชีวิต',description:'น้ำเป็นทรัพยากรสำคัญสำหรับสิ่งมีชีวิต ใช้ในการดำรงชีวิต การสังเคราะห์ด้วยแสง และการขนส่งสารอาหาร แหล่งน้ำยังเป็นที่อยู่อาศัยของสิ่งมีชีวิตหลากหลายชนิด',fact:'การเปลี่ยนแปลงคุณภาพและปริมาณน้ำอาจส่งผลต่อสิ่งมีชีวิตทั่วทั้งระบบนิเวศ',emoji:'💧'},
+sun:{title:'แสงอาทิตย์',subtitle:'ENERGY SOURCE · แหล่งพลังงาน',description:'ดวงอาทิตย์เป็นแหล่งพลังงานหลักของระบบนิเวศ พืชใช้พลังงานแสงในกระบวนการสังเคราะห์ด้วยแสง ก่อนที่พลังงานจะถ่ายทอดไปยังผู้บริโภคผ่านห่วงโซ่อาหาร',fact:'พลังงานจะลดลงในแต่ละลำดับขั้นของห่วงโซ่อาหาร ส่วนหนึ่งถูกใช้ในการดำรงชีวิตและสูญเสียเป็นความร้อน',emoji:'☀️'},
+mushroom:{title:'เห็ดและผู้ย่อยสลาย',subtitle:'DECOMPOSER · ผู้ย่อยสลาย',description:'เห็ดและจุลินทรีย์ช่วยย่อยสลายซากสิ่งมีชีวิตและของเสีย ให้กลายเป็นสารอาหารที่กลับคืนสู่ดิน ทำให้สารต่าง ๆ หมุนเวียนกลับมาใช้ใหม่ในระบบนิเวศ',fact:'หากไม่มีผู้ย่อยสลาย ซากอินทรียวัตถุจะสะสมและการหมุนเวียนสารอาหารในระบบนิเวศจะถูกรบกวน',emoji:'🍄'}
+};
+const ids=Object.keys(data);
+let selected='tree';
+let scene,camera,renderer,controls,raycaster,mouse;
+let objects=[];
+let autoRotate=true;
+let animationId;
+const pickables=[];
+const clock=new THREE.Clock();
+function mat(color,roughness=.8,metalness=0){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
+function addMesh(geometry,material,x,y,z,parent=scene,topic=null){
+const mesh=new THREE.Mesh(geometry,material);
+mesh.position.set(x,y,z);
+mesh.castShadow=true;
+mesh.receiveShadow=true;
+if(topic){mesh.userData.topic=topic;pickables.push(mesh)}
+parent.add(mesh);
+if(topic&&!objects.some(o=>o.userData.topic===topic))objects.push(mesh);
+return mesh;
+}
+function group(x,y,z,topic){
+const g=new THREE.Group();
+g.position.set(x,y,z);
+g.userData.topic=topic;
+scene.add(g);
+return g;
+}
+function addTree(x,z,scale=1){
+const g=group(x,0,z,'tree');
+addMesh(new THREE.CylinderGeometry(.13*scale,.2*scale,1.3*scale,9),mat('#8c6042'),0,.65*scale,0,g,'tree');
+const colors=['#347f61','#398d68','#4ba878','#286d55'];
+[[0,1.65,0,.76],[.12,2.05,0,.62],[-.1,2.4,.02,.45]].forEach((v,i)=>{
+const crown=addMesh(new THREE.IcosahedronGeometry(v[3]*scale,1),mat(colors[i%colors.length]),v[0]*scale,v[1]*scale,v[2]*scale,g,'tree');
+crown.scale.y=1.15;
+});
+}
+function addBush(x,z,s=1){
+const g=group(x,.1,z,'tree');
+[[0,.25,0],[.24,.2,.05],[-.22,.18,0]].forEach((p,i)=>{
+addMesh(new THREE.IcosahedronGeometry(.3*s,1),mat(['#3c8a5d','#55a76d','#347e55'][i]),p[0],p[1],p[2],g,'tree');
+});
+}
+function addRock(x,z,s=1,topic='water'){
+const m=addMesh(new THREE.DodecahedronGeometry(.35*s,0),mat('#718b91',.95),x,.16*s,z,scene,topic);
+m.scale.set(1.3,.7,1);
+m.rotation.set(.2,.5,.15);
+}
+function addFlower(x,z){
+const g=group(x,0,z,'tree');
+addMesh(new THREE.CylinderGeometry(.018,.025,.27,6),mat('#70bd75'),0,.13,0,g,'tree');
+for(let i=0;i<5;i++){
+const a=i*Math.PI*2/5;
+addMesh(new THREE.SphereGeometry(.055,8,8),mat(i%2?'#f4c6da':'#f3a7b7'),Math.cos(a)*.065,.31,Math.sin(a)*.065,g,'tree');
+}
+addMesh(new THREE.SphereGeometry(.04,8,8),mat('#f6d68b'),0,.31,0,g,'tree');
+}
+function addDeer(){
+const g=group(1.8,0,.6,'deer');
+addMesh(new THREE.SphereGeometry(.42,16,12),mat('#c99b64'),0,.75,0,g,'deer').scale.set(1.25,.85,.72);
+addMesh(new THREE.SphereGeometry(.2,12,10),mat('#c99b64'),.34,1.02,.02,g,'deer').scale.set(1,1,.8);
+addMesh(new THREE.ConeGeometry(.12,.38,10),mat('#c99b64'),.52,1.18,0,g,'deer').rotation.z=-.65;
+addMesh(new THREE.SphereGeometry(.035,8,8),mat('#20252c'),.63,1.2,.09,g,'deer');
+addMesh(new THREE.ConeGeometry(.06,.2,8),mat('#b97e52'),.32,1.3,.16,g,'deer').rotation.z=-.5;
+for(let x of [-.22,.28])for(let z of [-.2,.2]){
+addMesh(new THREE.CylinderGeometry(.055,.045,.45,8),mat('#9c714c'),x,.3,z,g,'deer').rotation.z=x*.3;
+}
+const antlerMat=mat('#d8c3a1');
+for(let z of [-.11,.11]){
+const base=addMesh(new THREE.CylinderGeometry(.018,.027,.24,6),antlerMat,.38,1.43,z,g,'deer');
+base.rotation.z=-.35;
+const tine=addMesh(new THREE.CylinderGeometry(.012,.02,.14,6),antlerMat,.43,1.54,z,g,'deer');
+tine.rotation.z=-.9;
+}
+}
+function addBird(x,y,z){
+const g=group(x,y,z,'bird');
+addMesh(new THREE.SphereGeometry(.17,12,10),mat('#e7b86d'),0,0,0,g,'bird').scale.set(1.25,.8,.85);
+addMesh(new THREE.SphereGeometry(.11,12,10),mat('#f4d5a0'),.16,.11,0,g,'bird');
+addMesh(new THREE.ConeGeometry(.05,.2,8),mat('#e58c50'),.29,.1,0,g,'bird').rotation.z=-Math.PI/2;
+for(let s of [-1,1]){
+const wing=addMesh(new THREE.SphereGeometry(.12,10,8),mat('#8bb9b2'),-.02,.04,s*.1,g,'bird');
+wing.scale.set(1.2,.35,.65);
+wing.rotation.z=s*.15;
+}
+}
+function addMushroom(x,z){
+const g=group(x,0,z,'mushroom');
+addMesh(new THREE.CylinderGeometry(.07,.11,.24,10),mat('#e9d6b8'),0,.12,0,g,'mushroom');
+addMesh(new THREE.SphereGeometry(.2,12,8,0,Math.PI*2,0,Math.PI/2),mat('#d96865'),0,.26,0,g,'mushroom').scale.set(1,1,.85);
+for(let i=0;i<5;i++){
+const a=i*1.26;
+addMesh(new THREE.SphereGeometry(.025,6,6),mat('#fff1db'),Math.cos(a)*.12,.34,Math.sin(a)*.12,g,'mushroom');
+}
+}
+function addSun(){
+const g=group(-3.8,4,-3,'sun');
+const orb=addMesh(new THREE.SphereGeometry(.42,24,24),new THREE.MeshBasicMaterial({color:'#ffe5a0'}),0,0,0,g,'sun');
+const glow=addMesh(new THREE.SphereGeometry(.62,24,24),new THREE.MeshBasicMaterial({color:'#ffc86d',transparent:true,opacity:.12,depthWrite:false}),0,0,0,g,'sun');
+const rays=new THREE.Group();g.add(rays);
+for(let i=0;i<12;i++){
+const a=i*Math.PI/6;
+const ray=new THREE.Mesh(new THREE.BoxGeometry(.045,.2,.045),mat('#f6d68b'));
+ray.position.set(Math.cos(a)*.58,Math.sin(a)*.58,0);
+ray.rotation.z=-a;
+rays.add(ray);
+}
+g.userData.rays=rays;
+}
+function addWater(){
+const g=group(0,0,0,'water');
+const shape=new THREE.Shape();
+shape.moveTo(-4,-2.4);
+shape.bezierCurveTo(-2.2,-1.6,-1.4,-2.6,.1,-1.6);
+shape.bezierCurveTo(1.7,-.6,2.7,-1.4,4,-.6);
+shape.lineTo(4,-2.6);
+shape.lineTo(-4,-2.6);
+shape.closePath();
+const geo=new THREE.ShapeGeometry(shape,24);
+const water=addMesh(geo,new THREE.MeshStandardMaterial({color:'#3c9fb3',roughness:.24,metalness:.08,transparent:true,opacity:.9,side:THREE.DoubleSide}),0,.035,0,g,'water');
+water.rotation.x=-Math.PI/2;
+water.position.set(0,.07,-1.5);
+}
+function addGround(){
+addMesh(new THREE.CylinderGeometry(5.5,5.7,.3,64),mat('#315c4a'),0,-.19,0,scene,null);
+addMesh(new THREE.CylinderGeometry(5.65,5.7,.15,64),mat('#5a755c'),0,-.38,0,scene,null);
+const ground=addMesh(new THREE.CircleGeometry(5.4,64),mat('#476b50'),0,-.025,0,scene,null);
+ground.rotation.x=-Math.PI/2;
+}
+function addSceneDecor(){
+for(let i=0;i<34;i++){
+const a=i*2.399;
+const r=1.7+(i%7)*.47;
+const x=Math.cos(a)*r,z=Math.sin(a)*r;
+if(x*x+z*z>25)continue;
+if(z<-1.0&&Math.abs(x)<3.7)continue;
+addMesh(new THREE.SphereGeometry(.035+(i%3)*.018,6,6),mat(i%2?'#9dc47d':'#d2b98a'),x,.02,z,scene,null);
+}
+for(let i=0;i<9;i++){
+const x=-3.9+(i%3)*.38,z=-.1+Math.floor(i/3)*.3;
+addFlower(x,z);
+}
+}
+function init(){
+if(!window.THREE||!THREE.OrbitControls){
+toast.textContent='โหลดไลบรารีไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต';
+toast.classList.add('show');
+return;
+}
+scene=new THREE.Scene();
+scene.background=new THREE.Color('#172c3a');
+scene.fog=new THREE.Fog('#172c3a',11,24);
+camera=new THREE.PerspectiveCamera(43,1,.1,100);
+camera.position.set(8,7,10);
+renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+scene.add(new THREE.AmbientLight('#d3e8ff',.85));
+const sunLight=new THREE.DirectionalLight('#ffe2b3',2.1);
+sunLight.position.set(-4,9,5);
+sunLight.castShadow=true;
+sunLight.shadow.mapSize.set(2048,2048);
+sunLight.shadow.camera.left=-9;
+sunLight.shadow.camera.right=9;
+sunLight.shadow.camera.top=9;
+sunLight.shadow.camera.bottom=-9;
+sunLight.shadow.bias=-.0005;
+scene.add(sunLight);
+const fill=new THREE.DirectionalLight('#79cce5',.65);
+fill.position.set(5,4,-6);
+scene.add(fill);
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.055;
+controls.enablePan=true;
+controls.minDistance=5;
+controls.maxDistance=20;
+controls.maxPolarAngle=Math.PI*.49;
+controls.target.set(0,.5,0);
+raycaster=new THREE.Raycaster();
+mouse=new THREE.Vector2();
+addGround();
+addWater();
+addTree(-2.5,-.6,1.15);
+addTree(-3.2,1.7,.8);
+addTree(-1.5,2.5,.78);
+addTree(2.9,2,.8);
+addTree(3.6,.3,.65);
+addTree(2.8,-2.3,.72);
+addBush(-1.4,-1.5,.9);
+addBush(2.4,-.8,.75);
+addBush(.3,1.9,.7);
+addRock(-1.2,-2.3,.8,'water');
+addRock(1.5,-2.1,.7,'water');
+addRock(3,-1.3,.55,'water');
+addDeer();
+addBird(-1.3,2.8,.6);
+addBird(1.5,2.5,-1.2);
+addMushroom(-2.3,-1.8);
+addMushroom(-1.9,-1.9);
+addSun();
+addSceneDecor();
+const floorRing=new THREE.Mesh(new THREE.TorusGeometry(5.52,.035,8,100),new THREE.MeshBasicMaterial({color:'#75e0b0',transparent:true,opacity:.35}));
+floorRing.rotation.x=Math.PI/2;
+floorRing.position.y=-.025;
+scene.add(floorRing);
+resize();
+window.addEventListener('resize',resize);
+canvas.addEventListener('pointerdown',onPointerDown);
+document.getElementById('resetBtn').addEventListener('click',resetCamera);
+document.getElementById('rotateBtn').addEventListener('click',toggleRotate);
+document.getElementById('nextBtn').addEventListener('click',nextTopic);
+document.querySelectorAll('.topic').forEach(b=>b.addEventListener('click',()=>selectTopic(b.dataset.id)));
+renderer.setAnimationLoop(animate);
+}
+function resize(){
+if(!renderer||!camera)return;
+const w=wrap.clientWidth,h=wrap.clientHeight;
+renderer.setSize(w,h,false);
+camera.aspect=w/h;
+camera.updateProjectionMatrix();
+}
+function animate(){
+const t=clock.getElapsedTime();
+if(autoRotate&&controls&&controls.enabled){
+controls.autoRotate=true;
+controls.autoRotateSpeed=.48;
+}else if(controls){controls.autoRotate=false}
+if(scene){
+scene.traverse(o=>{
+if(o.userData&&o.userData.rays)o.userData.rays.rotation.z=t*.15;
+});
+}
+controls.update();
+renderer.render(scene,camera);
+}
+function onPointerDown(event){
+if(event.button!==0)return;
+const rect=canvas.getBoundingClientRect();
+mouse.x=((event.clientX-rect.left)/rect.width)*2-1;
+mouse.y=-((event.clientY-rect.top)/rect.height)*2+1;
+raycaster.setFromCamera(mouse,camera);
+const hits=raycaster.intersectObjects(pickables,true);
+if(hits.length){
+let obj=hits[0].object;
+while(obj&&!obj.userData.topic)obj=obj.parent;
+if(obj&&obj.userData.topic)selectTopic(obj.userData.topic);
+}
+}
+function selectTopic(id){
+if(!data[id])return;
+selected=id;
+const index=ids.indexOf(id)+1;
+document.getElementById('counter').textContent=String(index).padStart(2,'0')+' / '+String(ids.length).padStart(2,'0');
+document.querySelectorAll('.topic').forEach(b=>b.classList.toggle('selected',b.dataset.id===id));
+const card=document.getElementById('infoCard');
+card.style.animation='none';
+void card.offsetWidth;
+card.style.animation='appear .35s ease';
+document.getElementById('infoTitle').textContent=data[id].title;
+document.getElementById('infoSubtitle').textContent=data[id].subtitle;
+document.getElementById('infoDescription').textContent=data[id].description;
+document.getElementById('infoFact').textContent=data[id].fact;
+const target=objects.find(o=>o.userData.topic===id);
+if(target&&controls){
+const worldPos=new THREE.Vector3();
+target.getWorldPosition(worldPos);
+const direction=new THREE.Vector3().subVectors(camera.position,controls.target).normalize();
+const distance=camera.position.distanceTo(controls.target);
+controls.target.lerp(worldPos,.4);
+camera.position.copy(worldPos.clone().add(direction.multiplyScalar(Math.max(6,Math.min(distance,10)))));
+controls.update();
+}
+}
+function nextTopic(){
+const index=(ids.indexOf(selected)+1)%ids.length;
+selectTopic(ids[index]);
+}
+function resetCamera(){
+camera.position.set(8,7,10);
+controls.target.set(0,.5,0);
+controls.update();
+showToast('รีเซ็ตมุมมองเรียบร้อย');
+}
+function toggleRotate(){
+autoRotate=!autoRotate;
+const btn=document.getElementById('rotateBtn');
+btn.classList.toggle('active',autoRotate);
+btn.textContent=autoRotate?'◉ หมุนอัตโนมัติ':'◉ หยุดหมุน';
+}
+let toastTimer;
+function showToast(message){
+toast.textContent=message;
+toast.classList.add('show');
+clearTimeout(toastTimer);
+toastTimer=setTimeout(()=>toast.classList.remove('show'),1700);
+}
+init();
+})();
+</script>
+</body>
+</html>
